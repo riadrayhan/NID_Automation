@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>NID Verification Tool</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: -apple-system, Arial, sans-serif; max-width: 960px; margin: 40px auto; padding: 20px; background: #f0f2f5; }
+        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); margin-bottom: 20px; }
+        h1 { color: #1a1a2e; margin-top: 0; }
+        h2 { color: #333; font-size: 18px; margin-top: 0; }
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+        .tab-btn { padding: 10px 20px; background: #e9ecef; border: none; border-radius: 8px; cursor: pointer; font-size: 15px; font-weight: 600; color: #555; }
+        .tab-btn.active { background: #007bff; color: white; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .upload-area { border: 2px dashed #007bff; border-radius: 8px; padding: 30px; text-align: center; margin: 15px 0; cursor: pointer; display: block; }
+        .upload-area:hover { background: #f0f7ff; }
+        .upload-area input[type="file"] { display: none; }
+        .upload-label { display: inline-block; padding: 10px 25px; background: #007bff; color: white; border-radius: 6px; cursor: pointer; font-size: 16px; }
+        .file-name { margin-top: 10px; color: #555; font-size: 14px; }
+        button[type="submit"] { padding: 12px 35px; background: #28a745; color: white; border: none; border-radius: 6px; font-size: 16px; cursor: pointer; margin-top: 10px; }
+        button[type="submit"]:hover { background: #1e7e34; }
+        .field-row { display: flex; gap: 12px; margin: 10px 0; }
+        .field-row input { padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 15px; }
+        .field-row input[name="m_nid"] { flex: 3; }
+        .field-row input[name="m_day"], .field-row input[name="m_month"] { flex: 1; }
+        .field-row input[name="m_year"] { flex: 1.5; }
+        .result-success { border-left: 4px solid #28a745; padding: 12px 15px; margin: 8px 0; background: #f0fff4; border-radius: 4px; word-wrap: break-word; }
+        .result-invalid { border-left: 4px solid #ff9800; padding: 12px 15px; margin: 8px 0; background: #fff8e1; border-radius: 4px; word-wrap: break-word; color: #8a6d3b; }
+        .result-error { border-left: 4px solid #dc3545; padding: 12px 15px; margin: 8px 0; background: #fff5f5; border-radius: 4px; word-wrap: break-word; }
+        .error-box { background: #fff5f5; border-left: 4px solid #dc3545; padding: 15px; border-radius: 4px; color: #dc3545; }
+        .hint { color: #666; font-size: 14px; margin-top: 10px; }
+        .summary { font-weight: bold; margin-bottom: 15px; font-size: 16px; }
+        .loading { display: none; margin-top: 15px; color: #666; }
+        .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid #ccc; border-top-color: #007bff; border-radius: 50%; animation: spin 0.8s linear infinite; margin-right: 8px; vertical-align: middle; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        code { background: #f0f2f5; padding: 2px 6px; border-radius: 3px; }
+        .csv-example { background: #f8f9fa; padding: 12px; border-radius: 6px; font-family: monospace; font-size: 13px; color: #333; margin: 10px 0; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h1>🇧🇩 NID Verification Tool</h1>
+    <p class="hint">⚠️ Only verify your own NID or NIDs you have written authorization for.</p>
+
+    <div class="tabs">
+        <button type="button" class="tab-btn active" onclick="switchTab('csv')">📁 Batch CSV</button>
+        <button type="button" class="tab-btn" onclick="switchTab('manual')">✍️ Manual Input</button>
+    </div>
+
+    <!-- CSV MODE -->
+    <div id="tab-csv" class="tab-content active">
+        <form method="POST" enctype="multipart/form-data" onsubmit="showLoading()">
+            <input type="hidden" name="mode" value="csv">
+            <p>Upload a CSV with columns: <code>nid, day, month, year</code></p>
+            <div class="csv-example">
+nid,day,month,year<br>
+1234567890,12,6,1996<br>
+9876543210,3,4,1973
+            </div>
+            <label for="csv_file" class="upload-area">
+                <span class="upload-label">📁 Choose CSV File</span>
+                <input type="file" id="csv_file" name="csv_file" accept=".csv" onchange="showFileName(this)" required>
+                <div class="file-name" id="file_name">No file selected</div>
+            </label>
+            <button type="submit">Start Batch Verification</button>
+            <div id="loading" class="loading"><span class="spinner"></span>Processing... Please wait.</div>
+        </form>
+    </div>
+
+    <!-- MANUAL MODE -->
+    <div id="tab-manual" class="tab-content">
+        <form method="POST" onsubmit="showLoading()">
+            <input type="hidden" name="mode" value="manual">
+            <p>Enter a single NID and date of birth:</p>
+            <div class="field-row">
+                <input type="text" name="m_nid" placeholder="NID Number" maxlength="17" required>
+            </div>
+            <div class="field-row">
+                <input type="text" name="m_day" placeholder="Day (DD)" maxlength="2" required>
+                <input type="text" name="m_month" placeholder="Month (MM)" maxlength="2" required>
+                <input type="text" name="m_year" placeholder="Year (YYYY)" maxlength="4" required>
+            </div>
+            <button type="submit">Verify</button>
+            <div id="loading" class="loading"><span class="spinner"></span>Processing... Please wait.</div>
+        </form>
+    </div>
+</div>
+
+{% if error %}
+<div class="card error-box"><strong>❌ Error:</strong> {{ error }}</div>
+{% endif %}
+
+{% if results %}
+<div class="card">
+    <div class="summary">📋 Results ({{ results|length }})</div>
+    {% for r in results %}
+        {% if r.status == 'VALID' %}
+        <div class="result-success">
+            <strong>✅ NID {{ r.nid }}</strong>
+            <div style="margin-top: 8px; line-height: 1.8;">
+                {% for part in r.message.split('|') %}<div>{{ part.strip() }}</div>{% endfor %}
+            </div>
+        </div>
+        {% elif r.status == 'INVALID' %}
+        <div class="result-invalid">
+            <strong>⚠️ NID {{ r.nid }}</strong> — Invalid NID or DOB
+            <div style="margin-top: 6px;">{{ r.message }}</div>
+        </div>
+        {% else %}
+        <div class="result-error">
+            <strong>❌ NID {{ r.nid }}</strong> — {{ r.status }}
+            <div style="margin-top: 6px;">{{ r.message }}</div>
+        </div>
+        {% endif %}
+    {% endfor %}
+</div>
+{% endif %}
+
+<script>
+function switchTab(name) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+    document.getElementById('tab-' + name).classList.add('active');
+    event.target.classList.add('active');
+}
+function showFileName(input) {
+    document.getElementById('file_name').textContent = input.files[0]?.name || 'No file selected';
+}
+function showLoading() {
+    document.querySelectorAll('.loading').forEach(el => el.style.display = 'block');
+}
+</script>
+
+</body>
+</html>

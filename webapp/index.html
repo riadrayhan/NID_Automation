@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="bn">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>NID Card Status - Manual Assistant (Web)</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 0; background: #f6f7f9; color: #111; }
+    .wrap { max-width: 860px; margin: 24px auto; padding: 20px; background: #fff; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,.08); }
+    table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 14px; }
+    th { background: #f0f2f5; }
+    tr.selected { background: #e8f0fe; }
+    .row { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0; }
+    button, a.btn { padding: 8px 14px; border-radius: 8px; border: 1px solid #ccc; background: #f8f9fa; cursor: pointer; text-decoration: none; color: #111; font-size: 14px; }
+    button:disabled { opacity: .5; cursor: not-allowed; }
+    button.primary { background: #0b57d0; color: #fff; border-color: #0b57d0; }
+    .muted { color: #555; font-size: 13px; }
+    .warn { background: #fff8e1; border: 1px solid #f0d060; padding: 10px; border-radius: 8px; font-size: 13px; margin-top: 12px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h2>NID Card Status — Manual Assistant</h2>
+    <p class="muted">CSV load koro (header: <code>nid,day,month,year</code>). Data shudhu ei browser tab-er memory-te thakbe, kothao upload hobe na. Ekta row select kore Copy kore official page-e nije bosao + captcha nije solve koro.</p>
+
+    <div class="row">
+      <input type="file" id="csvFile" accept=".csv,text/csv" />
+      <a class="btn" href="https://services.nidw.gov.bd/nid-pub/card-status" target="_blank" rel="noopener">Open official status page</a>
+      <button id="clearBtn">Clear list</button>
+      <button id="sampleBtn">Load sample (demo only)</button>
+    </div>
+
+    <div class="row">
+      <button id="copyNid" disabled>Copy selected NID</button>
+      <button id="copyDob" disabled>Copy selected date of birth</button>
+    </div>
+
+    <p id="selInfo" class="muted">Kono row select kora hoyni.</p>
+
+    <table>
+      <thead><tr><th>#</th><th>NID (masked)</th><th>Date of birth</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+
+    <div class="warn">
+      <b>Important:</b> Ekhane kono auto-fill / auto-submit / captcha-bypass nei — ichcha kore rakha hoyni.
+      Official portal-er captcha tomake nije browser-e solve korte hobe. Bulk automation ba captcha solve-er bot/paid-service use kora
+      portal-er terms-er biruddhe ebong block/khahini hote pare, tai eta add kora hoy ni.
+    </div>
+    <p id="status" class="muted">Data stays in this page only; it is not uploaded or saved.</p>
+  </div>
+
+<script src="./app.js"></script>
+</body>
+</html>
